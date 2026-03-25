@@ -4,6 +4,7 @@ import sys
 
 from crawler import Crawler
 from indexer import Indexer
+from search import SearchEngine
 
 INDEX_PATH = "data/index.json"
 
@@ -31,7 +32,7 @@ if not logger.handlers:
 def command_build():
     """
     build: crawl → index → save
-    Required by coursework brief:
+    Required by the coursework brief:
     - crawl the website
     - build the inverted index
     - save the result as a single file
@@ -44,24 +45,25 @@ def command_build():
 
     if not pages:
         logger.error("Crawler returned no pages. Aborting build.")
-        return
+        return None
 
     # 2. Index
     indexer = Indexer()
     indexer.build(pages)
 
-    # 3. Save
+    # 3. Save to data/
     os.makedirs("data", exist_ok=True)
     indexer.save(INDEX_PATH)
 
     logger.info(f"BUILD complete. Index saved to {INDEX_PATH}")
+    return indexer
 
 
 def command_load():
     """
-    load: loads the saved index file
-    Required by coursework brief:
-    - load index from file
+    load: loads the saved index file.
+    Required by the brief:
+    - load index from a single file
     - handle missing file gracefully
     """
     logger.info("Starting LOAD command...")
@@ -78,34 +80,91 @@ def command_load():
     return indexer
 
 
+def command_print(indexer: Indexer, word: str):
+    """
+    print <word>:
+    Show the inverted index entry for a word.
+    Required by the brief.
+    """
+    if indexer is None:
+        print("Please run 'load' first.")
+        return
+
+    engine = SearchEngine(indexer.index)
+    entry = engine.search_print(word)
+
+    if entry is None:
+        print(f"No entry for '{word}'")
+    else:
+        print(f"Word: {word}")
+        for page, stats in entry.items():
+            print(f" - Page: {page}")
+            print(f"   Frequency: {stats['frequency']}")
+            print(f"   Positions: {stats['positions']}")
+
+
+def command_find(indexer: Indexer, query: str):
+    """
+    find <word1 word2 ...>:
+    Return all pages containing ALL query words.
+    Required by the brief.
+    """
+    if indexer is None:
+        print("Please run 'load' first.")
+        return
+
+    engine = SearchEngine(indexer.index)
+    words = query.split()
+    pages = engine.search_find(words)
+
+    if not pages:
+        print("No matching pages found.")
+    else:
+        print("Pages containing ALL words:", pages)
+
+
 # ----------------------------------------------------------
 # CLI Loop
 # ----------------------------------------------------------
 
 def main():
+    indexer = None  # loaded index stored here
+
     logger.info("Search Engine CLI ready.")
-    logger.info("Commands: build, load, exit")
+    logger.info("Commands: build, load, print <word>, find <words>, exit")
 
     while True:
         try:
-            cmd = input("> ").strip().lower()
+            cmd = input("> ").strip()
         except (EOFError, KeyboardInterrupt):
             print()
             break
 
+        # No input
+        if not cmd:
+            continue
+
+        # Dispatch commands
         if cmd == "build":
-            command_build()
+            indexer = command_build()
 
         elif cmd == "load":
             indexer = command_load()
-            # later: store globally if needed for print/find
+
+        elif cmd.startswith("print "):
+            _, word = cmd.split(" ", 1)
+            command_print(indexer, word)
+
+        elif cmd.startswith("find "):
+            _, query = cmd.split(" ", 1)
+            command_find(indexer, query)
 
         elif cmd == "exit":
             logger.info("Exiting...")
             break
 
         else:
-            print("Unknown command. Options: build, load, exit")
+            print("Unknown command. Options: build, load, print, find, exit")
 
 
 if __name__ == "__main__":
