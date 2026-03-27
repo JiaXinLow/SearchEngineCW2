@@ -24,11 +24,9 @@ console.setFormatter(formatter)
 if not logger.handlers:
     logger.addHandler(console)
 
-
 # ----------------------------------------------------------
 # CLI Command Implementations
 # ----------------------------------------------------------
-
 def command_build():
     """
     build: crawl → index → save
@@ -58,7 +56,6 @@ def command_build():
     logger.info(f"BUILD complete. Index saved to {INDEX_PATH}")
     return indexer
 
-
 def command_load():
     """
     load: loads the saved index file.
@@ -78,7 +75,6 @@ def command_load():
 
     logger.info("LOAD complete — index is ready.")
     return indexer
-
 
 def command_print(indexer: Indexer, word: str):
     """
@@ -102,7 +98,6 @@ def command_print(indexer: Indexer, word: str):
             print(f"   Frequency: {stats['frequency']}")
             print(f"   Positions: {stats['positions']}")
 
-
 def command_find(indexer: Indexer, query: str):
     """
     find <word1 word2 ...>:
@@ -122,11 +117,9 @@ def command_find(indexer: Indexer, query: str):
     else:
         print("Pages containing ALL words:", pages)
 
-
 # ----------------------------------------------------------
 # CLI Loop
 # ----------------------------------------------------------
-
 def main():
     indexer = None  # loaded index stored here
 
@@ -151,12 +144,34 @@ def main():
         elif cmd == "load":
             indexer = command_load()
 
-        elif cmd.startswith("print "):
-            _, word = cmd.split(" ", 1)
+        # -------- PRINT COMMAND --------
+        elif cmd.startswith("print"):
+            if indexer is None:
+                print("Please run 'load' first.")
+                continue
+
+            parts = cmd.split(maxsplit=1)
+
+            if len(parts) == 1 or not parts[1].strip():
+                print("Usage: print <word>")
+                continue
+
+            word = parts[1].strip()
             command_print(indexer, word)
 
-        elif cmd.startswith("find "):
-            _, query = cmd.split(" ", 1)
+        # -------- FIND COMMAND --------
+        elif cmd.startswith("find"):
+            if indexer is None:
+                print("Please run 'load' first.")
+                continue
+
+            parts = cmd.split(maxsplit=1)
+
+            if len(parts) == 1 or not parts[1].strip():
+                print("Usage: find <word1 word2 ...>")
+                continue
+
+            query = parts[1].strip()
             command_find(indexer, query)
 
         elif cmd == "exit":
@@ -165,7 +180,6 @@ def main():
 
         else:
             print("Unknown command. Options: build, load, print, find, exit")
-
 
 if __name__ == "__main__":
     main()
