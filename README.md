@@ -44,6 +44,7 @@ This satisfies the functional requirements of the brief.
 ---
 
 # ⭐ 2. Project Structure
+```bash
 SearchEngineCW2/
 │
 ├── src/
@@ -62,6 +63,7 @@ SearchEngineCW2/
 │
 ├── requirements.txt
 └── README.md
+```
 
 ---
 
