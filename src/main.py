@@ -33,7 +33,7 @@ def command_help():
     print("  build                Crawl website, build index, save to file")
     print("  load                 Load index from data/index.json")
     print("  print <word>         Show index entry for a word")
-    print("  find <w1 w2 ...>     AND-search across multiple words")
+    print("  find <w1 w2 ...>     AND-search, ranked using TF-IDF")
     print("  help                 Show this help menu")
     print("  exit                 Quit the application")
     print("\nExamples:")
@@ -94,8 +94,7 @@ def command_load():
 
 def command_print(indexer: Indexer, word: str):
     """
-    print <word>:
-    Show the inverted index entry for a word.
+    print <word>: Show the inverted index entry for a word.
     """
     if indexer is None:
         print("Please run 'load' first.")
@@ -121,6 +120,7 @@ def command_find(indexer: Indexer, query: str):
     """
     find <word1 word2 ...>:
     Return all pages containing ALL query words.
+    Results are ranked with TF-IDF.
     """
     if indexer is None:
         print("Please run 'load' first.")
@@ -128,15 +128,15 @@ def command_find(indexer: Indexer, query: str):
 
     engine = SearchEngine(indexer.index)
     words = query.split()
-    pages = engine.search_find(words)
+    ranked_pages = engine.search_find(words)
 
-    if not pages:
+    if not ranked_pages:
         print("No matching pages found.")
     else:
-        print("\nPages containing ALL words:")
+        print("\nPages ranked by TF-IDF relevance:")
         print("-" * 40)
-        for p in pages:
-            print(p)
+        for rank, p in enumerate(ranked_pages, start=1):
+            print(f"{rank}. {p}")
         print("-" * 40)
         print()
 

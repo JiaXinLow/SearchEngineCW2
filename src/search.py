@@ -1,29 +1,48 @@
 import logging
+import math
 from typing import Dict, List, Set, Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class SearchEngine:
     """
     Provides search functionality on top of the inverted index.
 
-    Required Features (from COMP3011 brief):
-    - print <word>: display index entry
-    - find <words>: AND-search across pages
+    Features:
+    - print <word>  : display index entry
+    - find <words>  : AND-search with TF-IDF ranking
     - case-insensitive lookup
-    - supports multi-word queries
+    - multi-word query support
+    - optional TF-IDF scoring for improved relevance ranking
     """
 
     def __init__(self, index: Dict):
         self.index = index
         logger.debug(f"SearchEngine initialized with {len(index)} indexed words.")
 
+        # Pre-calc number of documents for IDF
+        self.total_docs = self._count_total_documents()
+        logger.debug(f"Total documents detected: {self.total_docs}")
+
+    # ----------------------------------------------------------
+    # INTERNAL UTILS
+    # ----------------------------------------------------------
+
+    def _count_total_documents(self) -> int:
+        """Total number of documents seen in index."""
+        pages = set()
+        for word_data in self.index.values():
+            for page_url in word_data.keys():
+                pages.add(page_url)
+        return len(pages)
+
     # ----------------------------------------------------------
     # Normalise words
     # ----------------------------------------------------------
 
-    def normalize(self, word: str) -> str: 
+    def normalize(self, word: str) -> str:
         norm = word.lower().strip()
         logger.debug(f"Normalizing search word '{word}' -> '{norm}'")
         return norm
@@ -31,12 +50,14 @@ class SearchEngine:
     # ----------------------------------------------------------
     # PRINT command
     # ----------------------------------------------------------
+
     def search_print(self, word: str) -> Optional[Dict]:
         """
         Returns index entry for a single word.
         Handles missing words & empty input.
         """
         logger.info(f"PRINT query: '{word}'")
+
         if not word.strip():
             logger.warning("Empty word passed to print().")
             return None
@@ -47,16 +68,50 @@ class SearchEngine:
             logger.info(f"Word '{word}' not found in index.")
             return None
 
+        logger.debug(f"PRINT result for '{word}': {self.index[word]}")
         return self.index[word]
 
     # ----------------------------------------------------------
-    # FIND command (AND-search)
+    # TF-IDF COMPONENTS
+    # ----------------------------------------------------------
+
+    def term_frequency(self, word: str, page: str) -> float:
+        """
+        TF = frequency of the word in this document.
+        """
+        freq = self.index[word][page]["frequency"]
+        logger.debug(f"TF({word}, {page}) = {freq}")
+        return freq
+
+    def inverse_document_frequency(self, word: str) -> float:
+        """
+        IDF = log(total_docs / docs_with_word)
+        Ensures words appearing in fewer documents have higher weight.
+        """
+        docs_with_word = len(self.index[word].keys())
+        if docs_with_word == 0:
+            return 0.0
+
+        idf = math.log(self.total_docs / docs_with_word)
+        logger.debug(f"IDF({word}) = {idf}")
+        return idf
+
+    def tfidf(self, word: str, page: str) -> float:
+        """Compute TF-IDF score for a single word on a specific page."""
+        tf = self.term_frequency(word, page)
+        idf = self.inverse_document_frequency(word)
+        score = tf * idf
+        logger.debug(f"TF-IDF({word}, {page}) = {score}")
+        return score
+
+    # ----------------------------------------------------------
+    # FIND command (AND-search + TF-IDF ranking)
     # ----------------------------------------------------------
 
     def search_find(self, words: List[str]) -> List[str]:
         """
-        Returns list of pages that contain ALL given words (AND-search).
-        Fulfills brief requirement for multiword queries.
+        Returns list of pages that contain ALL given words (AND-search),
+        ranked by total TF-IDF score.
         """
         logger.info(f"FIND query: {words}")
 
@@ -67,16 +122,15 @@ class SearchEngine:
             logger.warning("Empty find query received.")
             return []
 
-        # Check if any word appears in the index
+        # Check if all words are known
         for w in clean:
             if w not in self.index:
                 logger.info(f"'{w}' not in index → no pages match.")
                 return []
 
-        # Start with the set of pages for the first word
+        # AND-search → intersection of pages
         result_pages: Set[str] = set(self.index[clean[0]].keys())
 
-        # Intersect with all other word page-sets
         for w in clean[1:]:
             pages = set(self.index[w].keys())
             result_pages = result_pages.intersection(pages)
@@ -85,6 +139,18 @@ class SearchEngine:
                 logger.info("No pages contained all query words.")
                 return []
 
-        final = sorted(result_pages)
-        logger.info(f"FIND result pages: {final}")
-        return sorted(result_pages)
+        # ---------- TF-IDF RANKING ----------
+        scores = {}
+
+        for page in result_pages:
+            total_score = 0.0
+            for w in clean:
+                total_score += self.tfidf(w, page)
+            scores[page] = total_score
+            logger.debug(f"Aggregated TF-IDF for page '{page}' = {total_score}")
+
+        # Sort descending by score
+        ranked_pages = sorted(scores.keys(), key=lambda p: scores[p], reverse=True)
+
+        logger.info(f"Ranked FIND result: {ranked_pages}")
+        return ranked_pages
