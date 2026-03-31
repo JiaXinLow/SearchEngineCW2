@@ -2,6 +2,8 @@ import json
 import logging
 import re
 from dataclasses import dataclass, asdict
+from turtle import position
+from turtle import position
 from typing import Dict, List
 from pathlib import Path
 
@@ -31,6 +33,7 @@ class Indexer:
 
     def __init__(self):
         self.index: Dict[str, Dict[str, Dict[str, List[int] | int]]] = {}
+        logger.debug("Indexer initialized with empty index.")
 
     # ---------------------------------------------------------
     # Word Normalisation
@@ -38,9 +41,9 @@ class Indexer:
 
     def normalize(self, word: str) -> str:
         """Lowercase and remove punctuation."""
-        word = word.lower()
-        word = re.sub(r"[^a-z0-9']", "", word)
-        return word
+        norm = re.sub(r"[^a-z0-9']", "", word.lower())
+        logger.debug(f"Normalizing word '{word}' -> '{norm}'")
+        return norm
 
     # ---------------------------------------------------------
     # Add Word Occurrence to Index
@@ -49,6 +52,7 @@ class Indexer:
     def add_to_index(self, word: str, page_url: str, position: int) -> None:
         """Adds a word occurrence to the index."""
         if word == "":
+            logger.debug(f"Skipping empty word at position {position} on page {page_url}.")
             return
 
         if word not in self.index:
@@ -62,6 +66,12 @@ class Indexer:
 
         self.index[word][page_url]["frequency"] += 1
         self.index[word][page_url]["positions"].append(position)
+
+        logger.debug(
+            f"Added word '{word}' on page '{page_url}' "
+            f"(freq={self.index[word][page_url]['frequency']}, pos={position})"
+        )
+
 
     # ---------------------------------------------------------
     # Index a Single Page
@@ -86,12 +96,15 @@ class Indexer:
                 self.add_to_index(norm, page.url, position)
                 position += 1
 
+        logger.debug(f"Finished indexing page: {page.url}")
+
     # ---------------------------------------------------------
     # Build Index Over All Pages
     # ---------------------------------------------------------
 
     def build(self, pages: List[PageData]) -> None:
         """Builds an index from a list of PageData."""
+        logger.info(f"Building index from {len(pages)} pages...")
         for page in pages:
             self.index_page(page)
 
