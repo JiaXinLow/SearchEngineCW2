@@ -158,7 +158,7 @@ Pages ranked by TF-IDF relevance:
 3. https://quotes.toscrape.com/ (score = 0.6694)
 ```
 
-## ✔ ✔ Multi‑word queries use the same AND‑search logic
+## ✔ Multi‑word queries use the same AND‑search logic
 ```bash
 > find truth lies
 ```
