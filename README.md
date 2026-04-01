@@ -8,10 +8,8 @@ The system includes:
 - A **polite web crawler** (6‑second delay)  
 - An **inverted index** storing frequency + positions  
 - A **command‑line interface** with `build`, `load`, `print`, `find` commands  
-- A **search engine** supporting AND‑queries  
-- A **complete test suite** (crawler, indexer, search)  
-
-This matches the specifications in the coursework brief.
+- A **search engine** supporting AND‑queries with **TF‑IDF relevance ranking**
+- A **complete automated test suite** (crawler, indexer, search)  
 
 ---
 
@@ -37,7 +35,7 @@ Two types of search are supported:
 | Command | Description |
 |---------|-------------|
 | `print <word>` | Shows every page containing the word + frequency + positions |
-| `find <w1 w2 ...>` | AND‑search: returns pages containing **all** query words |
+| `find <w1 w2 ...>` | AND‑search returning pages that contain **all** query words, ranked by **TF‑IDF relevance** |
 
 This satisfies the functional requirements of the brief.
 
@@ -97,7 +95,29 @@ python src/main.py
 
 When the CLI starts, type commands such as:
 
-✔ Build index (crawl → index → save)
+## ✔ Help command
+The CLI includes a built‑in help menu to guide usage:
+```bash
+> help
+```
+
+Example output:
+```bash
+Available Commands:
+  build                Crawl website, build index, save to file
+  load                 Load index from data/index.json
+  print <word>         Show index entry for a word
+  find <w1 w2 ...>     AND-search, ranked using TF-IDF
+  help                 Show this help menu
+  exit                 Quit the application
+
+Examples:
+  print life
+  find good friends
+```
+This command improves usability and discoverability of features.
+
+## ✔ Build index (crawl → index → save)
 ```bash
 > build
 ```
@@ -106,12 +126,12 @@ This will:
 - build the inverted index
 - save it into data/index.json
 
-✔ Load index
+## ✔ Load index
 ```bash
 > load
 ```
 
-✔ Print word index entry
+## ✔ Print word index entry
 ```bash
 > print wisdom
 ```
@@ -124,28 +144,48 @@ Word: wisdom
    Positions: [14]
 ```
 
-✔ Multi‑word AND search
+## ✔ AND‑search with TF‑IDF ranking
+Only pages containing **all query terms in the same quote block** are returned. Results are ranked by TF‑IDF relevance, with higher‑scoring pages appearing first.
 ```bash
-> find life wisdom
+> find life
 ```
 
 Example output:
 ```bash
-Pages containing ALL words: ['https://quotes.toscrape.com/page/1/']
+Pages ranked by TF-IDF relevance:
+1. https://quotes.toscrape.com/page/2/ (score = 1.7851)
+2. https://quotes.toscrape.com/page/6/ (score = 0.8926)
+3. https://quotes.toscrape.com/ (score = 0.6694)
 ```
 
-✔ Exit CLI
+## ✔ ✔ Multi‑word queries use the same AND‑search logic
+```bash
+> find truth lies
+```
+
+## ✔ Exit CLI
 ```bash
 > exit
 ```
 
 ---
 
-# ⭐ 5. Testing Instructions
-The project includes a full test suite with 17+ tests, covering:
+# ⭐ 5. Advanced Feature: TF‑IDF Relevance Ranking
+To improve search quality, the search engine implements **TF‑IDF (Term Frequency–Inverse Document Frequency) ranking**, an information‑retrieval technique that balances:
+
+- **Term Frequency (TF)**: how often a word appears on a page
+- **Inverse Document Frequency (IDF)**: how rare the word is across all pages
+
+For multi‑word queries, TF‑IDF scores are **summed across all query terms**, and pages are returned in descending order of relevance.
+This ensures that pages where query terms are more prominent appear first.
+
+---
+
+# ⭐ 6. Testing Instructions
+The project includes a full test suite with **20 tests**, covering:
 - crawler
 - indexer
-- search engine
+- search functionality and TF‑IDF ranking
 To run all tests:
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
@@ -153,14 +193,14 @@ python -m unittest discover -s tests -p "test_*.py"
 
 You should see:
 ```bash
-Ran 17 tests
+Ran 20 tests
 OK
 ```
 This test suite meets the coursework requirement for thorough automated testing.
 
 ---
 
-# ⭐ 6. Dependencies
+# ⭐ 7. Dependencies
 Installed via requirements.txt:
 ```bash
 requests
@@ -168,7 +208,7 @@ beautifulsoup4
 ```
 Both libraries are recommended in the coursework brief.
 
-# ⭐ 7. GenAI Usage Declaration
+# ⭐ 8. GenAI Usage Declaration
 This project used GenAI (Microsoft Copilot) for:
 - helping structure modules (crawler.py, indexer.py, search.py)
 - debugging and refining logic
@@ -182,7 +222,7 @@ This project used GenAI (Microsoft Copilot) for:
 - I fully understand all parts of the codebase and can explain them during the demonstration.
 - All AI-generated suggestions were reviewed, rewritten, and corrected for accuracy.
 
-# ⭐ 8. Notes for Assessors
+# ⭐ 9. Notes for Assessors
 The project:
 - Works on Windows, macOS, and Linux
 - Does not require network access during testing (crawler tests are fully mocked)
