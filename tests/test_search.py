@@ -52,27 +52,30 @@ class TestSearchEngine(unittest.TestCase):
     def test_find_single_word(self):
         # hello appears in page1 (TF=2) and page2 (TF=1)
         # Both should be returned — ranking decides order
-        pages = self.engine.search_find(["hello"])
+        results = self.engine.search_find(["hello"])
+        pages = [p for p, _ in results]
         self.assertEqual(sorted(pages), ["page1", "page2"])
 
     def test_find_multiple_words_and_search(self):
         # Only page1 has BOTH hello + world
-        pages = self.engine.search_find(["hello", "world"])
+        results = self.engine.search_find(["hello", "world"])
+        pages = [p for p, _ in results]
         self.assertEqual(pages, ["page1"])
 
     def test_find_no_overlap(self):
-        pages = self.engine.search_find(["hello", "nonexistent"])
-        self.assertEqual(pages, [])
+        results = self.engine.search_find(["hello", "nonexistent"])
+        self.assertEqual(results, [])
 
     def test_find_empty_query(self):
-        pages = self.engine.search_find([])
-        self.assertEqual(pages, [])
+        results = self.engine.search_find([])
+        self.assertEqual(results, [])
 
     # ------------------------------------------------------
     # Case-insensitivity
     # ------------------------------------------------------
     def test_case_insensitive(self):
-        pages = self.engine.search_find(["HeLLo"])
+        results = self.engine.search_find(["HeLLo"])
+        pages = [p for p, _ in results]
         self.assertEqual(sorted(pages), ["page1", "page2"])
 
     # ------------------------------------------------------
@@ -87,7 +90,8 @@ class TestSearchEngine(unittest.TestCase):
         IDF is identical for both pages, so ranking must be:
         page1 first, then page2.
         """
-        pages = self.engine.search_find(["hello"])
+        results = self.engine.search_find(["hello"])
+        pages = [p for p, _ in results]
         self.assertEqual(pages, ["page1", "page2"])
 
     def test_tfidf_ranking_multi_word(self):
@@ -98,8 +102,8 @@ class TestSearchEngine(unittest.TestCase):
         Only page1 contains BOTH.
         Ranking should return only page1.
         """
-        pages = self.engine.search_find(["hello", "world"])
-        self.assertEqual(pages, ["page1"])
+        results = self.engine.search_find(["hello", "world"])
+        self.assertEqual(results[0][0], "page1")
 
     def test_tfidf_ranking_prefers_higher_score(self):
         """
@@ -116,12 +120,9 @@ class TestSearchEngine(unittest.TestCase):
         }
         engine = SearchEngine(modified_index)
 
-        pages = engine.search_find(["hello"])
-        # page1 has highest TF, so page1 must be first
-        self.assertEqual(pages[0], "page1")
-        # the rest follow in any order, but preserve length
-        self.assertEqual(len(pages), 3)
-
+        results = engine.search_find(["hello"])
+        self.assertEqual(results[0][0], "page1")
+        self.assertEqual(len(results), 3)
 
 if __name__ == "__main__":
     unittest.main()

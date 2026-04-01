@@ -135,8 +135,8 @@ def command_find(indexer: Indexer, query: str):
     else:
         print("\nPages ranked by TF-IDF relevance:")
         print("-" * 40)
-        for rank, p in enumerate(ranked_pages, start=1):
-            print(f"{rank}. {p}")
+        for rank, (page, score) in enumerate(ranked_pages, start=1):
+            print(f"{rank}. {page} (score = {score:.4f})")
         print("-" * 40)
         print()
 

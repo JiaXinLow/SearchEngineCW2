@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Dict, List, Set, Optional
+from typing import Dict, List, Set, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,7 +15,7 @@ class SearchEngine:
     - find <words>  : AND-search with TF-IDF ranking
     - case-insensitive lookup
     - multi-word query support
-    - optional TF-IDF scoring for improved relevance ranking
+    - TF-IDF scoring exposed for ranked output
     """
 
     def __init__(self, index: Dict):
@@ -108,7 +108,7 @@ class SearchEngine:
     # FIND command (AND-search + TF-IDF ranking)
     # ----------------------------------------------------------
 
-    def search_find(self, words: List[str]) -> List[str]:
+    def search_find(self, words: List[str]) -> List[Tuple[str, float]]:
         """
         Returns list of pages that contain ALL given words (AND-search),
         ranked by total TF-IDF score.
@@ -140,17 +140,17 @@ class SearchEngine:
                 return []
 
         # ---------- TF-IDF RANKING ----------
-        scores = {}
+        scored_pages: List[Tuple[str, float]] = []
 
         for page in result_pages:
             total_score = 0.0
             for w in clean:
                 total_score += self.tfidf(w, page)
-            scores[page] = total_score
+            scored_pages.append((page, total_score))
             logger.debug(f"Aggregated TF-IDF for page '{page}' = {total_score}")
 
         # Sort descending by score
-        ranked_pages = sorted(scores.keys(), key=lambda p: scores[p], reverse=True)
-
-        logger.info(f"Ranked FIND result: {ranked_pages}")
-        return ranked_pages
+        scored_pages.sort(key=lambda x: x[1], reverse=True)
+        
+        logger.info(f"Ranked FIND result with scores: {scored_pages}")
+        return scored_pages
