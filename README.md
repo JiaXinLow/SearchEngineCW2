@@ -145,7 +145,9 @@ Word: wisdom
 ```
 
 ## ✔ AND‑search with TF‑IDF ranking
-Only pages containing **all query terms in the same quote block** are returned. Results are ranked by TF‑IDF relevance, with higher‑scoring pages appearing first.
+Only pages containing all query terms are returned. Search operates at the page level using AND-intersection over indexed pages, not at the individual quote level.
+
+This page-level search simplifies the indexing and retrieval logic while remaining consistent with the coursework requirements, which do not mandate quote-level or positional phrase matching.
 ```bash
 > find life
 ```
