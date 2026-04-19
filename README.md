@@ -67,7 +67,29 @@ SearchEngineCW2/
 
 ---
 
-# ⭐ 3. Installation Instructions
+# ⭐ 3. Architecture and Design Rationale
+The system is intentionally structured as a **modular, command‑driven pipeline**:
+
+Crawler → Indexer → SearchEngine → CLI
+
+- **Crawler:** Responsible solely for polite HTTP retrieval and HTML parsing. It follows pagination, enforces a 6‑second politeness window, and converts raw HTML into structured PageData objects.
+- **Indexer:** Converts structured page content into an inverted index, tracking word frequency and positional information per page. Index construction and persistence are handled independently of querying.
+- **SearchEngine:** Performs query processing and ranking on top of the in‑memory inverted index, supporting single‑word lookup, multi‑word AND‑search, and TF‑IDF relevance ranking. It operates independently of crawling and storage.
+- **CLI (main.py):** Acts as the orchestration layer, coordinating user input and command execution without embedding core application logic.
+
+This separation of concerns improves testability, maintainability, and clarity. Each component can be tested in isolation (e.g. crawler with mocked HTTP requests, search with synthetic indices) while also supporting integration-style testing of the full pipeline.
+
+## Command-to-Component Workflow
+Each CLI command activates a specific subset of the system:
+- **build** → Crawler → Indexer → save index to disk
+- **load** → load index file into memory via the Indexer
+- **print <word>** → SearchEngine → single‑word index lookup
+- **find <words>** → SearchEngine → AND‑search with TF‑IDF ranking
+This design avoids unnecessary computation (e.g. re‑crawling during search), ensures predictable command behaviour, and keeps interactive usage responsive.
+
+---
+
+# ⭐ 4. Installation Instructions
 
 ### 1. Clone the repository
 ```bash
@@ -89,7 +111,7 @@ pip install -r requirements.txt
 
 ---
 
-# ⭐ 4. Running the CLI Tool
+# ⭐ 5. Running the CLI Tool
 Run:
 ```bash
 python src/main.py
@@ -174,7 +196,7 @@ Pages ranked by TF-IDF relevance:
 
 ---
 
-# ⭐ 5. Advanced Feature: TF‑IDF Relevance Ranking
+# ⭐ 6. Advanced Feature: TF‑IDF Relevance Ranking
 To improve search quality, the search engine implements **TF‑IDF (Term Frequency–Inverse Document Frequency) ranking**, an information‑retrieval technique that balances:
 
 - **Term Frequency (TF)**: how often a word appears on a page
@@ -185,7 +207,35 @@ This ensures that pages where query terms are more prominent appear first.
 
 ---
 
-# ⭐ 6. Testing Instructions
+# ⭐ 7. Algorithmic Complexity Considerations 
+Let:
+- N = total number of indexed word occurrences across all pages
+- D = total number of pages
+- Q = number of query terms
+
+**Index construction**
+- Time complexity: Indexing runs in O(N) time, as each word occurrence is processed exactly once during indexing.
+- Space complexity: O(N), storing frequency and positional information for each indexed word occurrence.
+
+**Search Operations**
+- AND‑search (find): Page intersection runs in O(Q · D) in the worst case, followed by scoring only on the intersected result set.
+- TF‑IDF scoring: Runs in O(Q · R), where R is the number of result pages after intersection.
+
+To support IDF computation, the total document count is **precomputed once during SearchEngine initialisation**, avoiding repeated scanning of the index during queries.
+
+**Command-Level Perspective**
+
+From a user’s perspective:
+- **build** is the most expensive operation, dominated by crawling latency and index construction.
+- **load** runs in linear time relative to index size and avoids recomputation.
+- **print** is near O(1) average‑case due to dictionary lookup.
+- **find** scales with query size and result set, enabling efficient interactive querying.
+
+These trade‑offs are appropriate for the target dataset size and prioritise correctness, clarity, and maintainability over premature optimisation.
+
+---
+
+# ⭐ 8. Testing Instructions
 The project includes a full test suite with **21 tests**, covering:
 - crawler logic (with mocked HTTP requests)
 - inverted index construction (frequency, positions, multi-page behaviour)
@@ -208,7 +258,7 @@ The majority of core logic is exercised by automated tests, including edge cases
 
 ---
 
-# ⭐ 7. Dependencies
+# ⭐ 9. Dependencies
 Installed via requirements.txt:
 ```bash
 requests
@@ -216,7 +266,7 @@ beautifulsoup4
 ```
 Both libraries are recommended in the coursework brief.
 
-# ⭐ 8. GenAI Usage Declaration
+# ⭐ 10. GenAI Usage Declaration
 This project used GenAI (Microsoft Copilot) for:
 - helping structure modules (crawler.py, indexer.py, search.py)
 - debugging and refining logic
@@ -230,7 +280,7 @@ This project used GenAI (Microsoft Copilot) for:
 - I fully understand all parts of the codebase and can explain them during the demonstration.
 - All AI-generated suggestions were reviewed, rewritten, and corrected for accuracy.
 
-# ⭐ 9. Notes for Assessors
+# ⭐ 11. Notes for Assessors
 The project:
 - Works on Windows, macOS, and Linux
 - Does not require network access during testing (crawler tests are fully mocked)
