@@ -54,7 +54,8 @@ SearchEngineCW2/
 ├── tests/
 │   ├── test_crawler.py
 │   ├── test_indexer.py
-│   └── test_search.py
+│   ├── test_search.py
+│   └── test_cli_integration.py
 │
 ├── data/
 │   └── index.json (generated after build)
