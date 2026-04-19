@@ -107,22 +107,23 @@ class TestSearchEngine(unittest.TestCase):
 
     def test_tfidf_ranking_prefers_higher_score(self):
         """
-        Modify the index slightly so we can check ranking difference:
-        'hello' has TF=3 in page1 and TF=1 in page2.
-        IDF is the same for both pages.
+        TF-IDF ranking should prefer higher TF when IDF > 0.
+        Here, 'hello' appears in 2 out of 3 documents.
         """
         modified_index = {
             "hello": {
                 "page1": {"frequency": 3, "positions": [0, 5, 6]},
-                "page2": {"frequency": 1, "positions": [3]},
-                "page3": {"frequency": 1, "positions": [10]},
+                "page2": {"frequency": 1, "positions": [3]}, 
+            },
+            "other": {
+                "page3": {"frequency": 2, "positions": [1, 2]}
             }
         }
         engine = SearchEngine(modified_index)
 
         results = engine.search_find(["hello"])
         self.assertEqual(results[0][0], "page1")
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 2)
 
 if __name__ == "__main__":
     unittest.main()

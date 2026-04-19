@@ -58,6 +58,7 @@ SearchEngineCW2/
 │
 ├── data/
 │   └── index.json (generated after build)
+│   └── test_index.json (generated after tests)
 │
 ├── requirements.txt
 └── README.md
@@ -184,10 +185,14 @@ This ensures that pages where query terms are more prominent appear first.
 ---
 
 # ⭐ 6. Testing Instructions
-The project includes a full test suite with **20 tests**, covering:
-- crawler
-- indexer
-- search functionality and TF‑IDF ranking
+The project includes a full test suite with **21 tests**, covering:
+- crawler logic (with mocked HTTP requests)
+- inverted index construction (frequency, positions, multi-page behaviour)
+- search functionality (print, AND-search, case-insensitivity)
+- TF-IDF ranking behaviour
+- save/load persistence
+- integration between indexing and search components
+
 To run all tests:
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
@@ -195,10 +200,10 @@ python -m unittest discover -s tests -p "test_*.py"
 
 You should see:
 ```bash
-Ran 20 tests
+Ran 21 tests
 OK
 ```
-This test suite meets the coursework requirement for thorough automated testing.
+The majority of core logic is exercised by automated tests, including edge cases such as empty queries and missing terms. Overall test coverage is high across functional components, and the CLI workflow is validated through integration-style tests without requiring network access.
 
 ---
 
