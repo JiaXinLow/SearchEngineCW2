@@ -266,6 +266,8 @@ beautifulsoup4
 ```
 Both libraries are recommended in the coursework brief.
 
+---
+
 # ⭐ 10. GenAI Usage Declaration and Critical Evaluation
 I made selective use of **Generative AI tools (Microsoft Copilot)** during the development of this project, using them as a **supportive aid** rather than a source of final solutions. All AI‑generated suggestions were critically evaluated, modified, and validated before being incorporated.
 
@@ -285,6 +287,8 @@ I made selective use of **Generative AI tools (Microsoft Copilot)** during the d
 - Debugging and correcting AI‑generated suggestions contributed meaningfully to my learning, particularly in understanding search algorithms, ranking behaviour, and edge cases.
 
 Overall, GenAI functioned as a **productivity aid**, while all final design decisions, implementations, and learning outcomes are the result of my own reasoning and development work.
+
+---
 
 # ⭐ 11. Notes for Assessors
 The project:
