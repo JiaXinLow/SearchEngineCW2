@@ -69,9 +69,9 @@ SearchEngineCW2/
 
 # ⭐ 3. Architecture and Design Rationale
 The system is intentionally structured as a **modular, command‑driven pipeline**:
-
+```bash
 Crawler → Indexer → SearchEngine → CLI
-
+```
 - **Crawler:** Responsible solely for polite HTTP retrieval and HTML parsing. It follows pagination, enforces a 6‑second politeness window, and converts raw HTML into structured PageData objects.
 - **Indexer:** Converts structured page content into an inverted index, tracking word frequency and positional information per page. Index construction and persistence are handled independently of querying.
 - **SearchEngine:** Performs query processing and ranking on top of the in‑memory inverted index, supporting single‑word lookup, multi‑word AND‑search, and TF‑IDF relevance ranking. It operates independently of crawling and storage.
@@ -79,12 +79,13 @@ Crawler → Indexer → SearchEngine → CLI
 
 This separation of concerns improves testability, maintainability, and clarity. Each component can be tested in isolation (e.g. crawler with mocked HTTP requests, search with synthetic indices) while also supporting integration-style testing of the full pipeline.
 
-## Command-to-Component Workflow
+### Command-to-Component Workflow
 Each CLI command activates a specific subset of the system:
 - **build** → Crawler → Indexer → save index to disk
 - **load** → load index file into memory via the Indexer
 - **print <word>** → SearchEngine → single‑word index lookup
 - **find <words>** → SearchEngine → AND‑search with TF‑IDF ranking
+
 This design avoids unnecessary computation (e.g. re‑crawling during search), ensures predictable command behaviour, and keeps interactive usage responsive.
 
 ---
@@ -119,7 +120,7 @@ python src/main.py
 
 When the CLI starts, type commands such as:
 
-## ✔ Help command
+### ✔ Help command
 The CLI includes a built‑in help menu to guide usage:
 ```bash
 > help
@@ -141,7 +142,7 @@ Examples:
 ```
 This command improves usability and discoverability of features.
 
-## ✔ Build index (crawl → index → save)
+### ✔ Build index (crawl → index → save)
 ```bash
 > build
 ```
@@ -150,12 +151,12 @@ This will:
 - build the inverted index
 - save it into data/index.json
 
-## ✔ Load index
+### ✔ Load index
 ```bash
 > load
 ```
 
-## ✔ Print word index entry
+### ✔ Print word index entry
 ```bash
 > print wisdom
 ```
@@ -168,7 +169,7 @@ Word: wisdom
    Positions: [14]
 ```
 
-## ✔ AND‑search with TF‑IDF ranking
+### ✔ AND‑search with TF‑IDF ranking
 Only pages containing all query terms are returned. Search operates at the page level using AND-intersection over indexed pages, not at the individual quote level.
 
 This page-level search simplifies the indexing and retrieval logic while remaining consistent with the coursework requirements, which do not mandate quote-level or positional phrase matching.
@@ -184,12 +185,12 @@ Pages ranked by TF-IDF relevance:
 3. https://quotes.toscrape.com/ (score = 0.6694)
 ```
 
-## ✔ Multi‑word queries use the same AND‑search logic
+### ✔ Multi‑word queries use the same AND‑search logic
 ```bash
 > find truth lies
 ```
 
-## ✔ Exit CLI
+### ✔ Exit CLI
 ```bash
 > exit
 ```
@@ -213,18 +214,17 @@ Let:
 - D = total number of pages
 - Q = number of query terms
 
-**Index construction**
+### Index construction
 - Time complexity: Indexing runs in O(N) time, as each word occurrence is processed exactly once during indexing.
 - Space complexity: O(N), storing frequency and positional information for each indexed word occurrence.
 
-**Search Operations**
+### Search Operations
 - AND‑search (find): Page intersection runs in O(Q · D) in the worst case, followed by scoring only on the intersected result set.
 - TF‑IDF scoring: Runs in O(Q · R), where R is the number of result pages after intersection.
 
 To support IDF computation, the total document count is **precomputed once during SearchEngine initialisation**, avoiding repeated scanning of the index during queries.
 
-**Command-Level Perspective**
-
+### Command-Level Perspective
 From a user’s perspective:
 - **build** is the most expensive operation, dominated by crawling latency and index construction.
 - **load** runs in linear time relative to index size and avoids recomputation.
@@ -269,17 +269,17 @@ Both libraries are recommended in the coursework brief.
 # ⭐ 10. GenAI Usage Declaration and Critical Evaluation
 I made selective use of **Generative AI tools (Microsoft Copilot)** during the development of this project, using them as a **supportive aid** rather than a source of final solutions. All AI‑generated suggestions were critically evaluated, modified, and validated before being incorporated.
 
-## How GenAI Helped Me
+### How GenAI Helped Me
 - I used GenAI during early development to explore **high‑level module structuring ideas**, which helped me compare alternative ways to separate the crawler, indexer, and search components before finalising the design myself.
 - GenAI was useful for **recalling API usage patterns**, particularly for BeautifulSoup HTML parsing and Python logging configuration, reducing documentation lookup time.
 - Initial **test scaffolding** generated by GenAI provided a starting structure, which I then expanded manually to include edge cases, mocking, and TF‑IDF‑specific behaviour.
 
-## Where GenAI Was Limited or Incorrect
+### Where GenAI Was Limited or Incorrect
 - Some early GenAI suggestions for the inverted index relied on **over‑complex or inefficient data structures**, which I rejected in favour of a simpler dictionary‑based design with explicit frequency and positional tracking.
 - GenAI explanations of **TF‑IDF ranking** did not initially account for zero‑IDF scenarios (when a term appears in all documents). This limitation became evident during testing and required me to correct both test assumptions and reasoning based on my own understanding.
 - In several cases, GenAI produced answers that appeared confident but were **imprecise or shallow**, reinforcing the need to independently verify correctness against the actual code behaviour.
 
-## Learning Impact and Reflection
+### Learning Impact and Reflection
 - Using GenAI reinforced the importance of ****active evaluation rather than passive acceptance** of generated output.
 - I deliberately avoided relying on GenAI for **core algorithmic decisions**, ensuring that I fully understand and can justify every part of the system.
 - Debugging and correcting AI‑generated suggestions contributed meaningfully to my learning, particularly in understanding search algorithms, ranking behaviour, and edge cases.
@@ -294,6 +294,7 @@ The project:
 - Includes complete test coverage
 - Provides all four required CLI commands
 - Demo-ready for recording
+
 Please run:
 ```bash
 python src/main.py
